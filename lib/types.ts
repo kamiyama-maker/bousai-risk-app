@@ -53,6 +53,8 @@ export interface Shelter {
 export interface ShelterResult {
   shelters: Shelter[];
   source: string;
+  /** 国土地理院「指定緊急避難場所」マップへの直接リンク（目視確認用） */
+  portalUrl?: string;
   error?: string;
 }
 

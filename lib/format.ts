@@ -129,7 +129,12 @@ export function formatPlanText(r: ResearchResult): string {
   lines.push("");
 
   // 避難所
-  lines.push("■ 最寄りの避難場所");
+  lines.push("■ 最寄りの指定避難場所");
+  if (r.shelters?.portalUrl) {
+    lines.push(
+      `（正式な指定緊急避難場所は国土地理院マップで確認： ${r.shelters.portalUrl} ）`
+    );
+  }
   if (r.shelters && r.shelters.shelters.length > 0) {
     r.shelters.shelters.slice(0, 3).forEach((s, i) => {
       const tagText = s.tags.length ? ` [${s.tags.join(", ")}]` : "";
@@ -138,11 +143,11 @@ export function formatPlanText(r: ResearchResult): string {
       );
     });
     lines.push(
-      "※上記はOpenStreetMap登録の参考情報です。最終確認は自治体の指定緊急避難場所一覧を参照してください。"
+      "※上記はOSM登録の参考情報（駅の休憩所等は除外済み）。正式名称・収容人数・対応災害種別は所在自治体の『指定緊急避難場所一覧』でご確認ください。"
     );
   } else {
     lines.push(
-      "自動取得できませんでした。所在地の自治体が公表する指定緊急避難場所一覧を確認してください。"
+      "OSM上では3km圏内に該当タグの避難場所が登録されていませんでした。所在地の自治体が公表する指定緊急避難場所一覧を上記リンクから確認してください。"
     );
   }
   lines.push("");

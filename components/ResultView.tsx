@@ -260,7 +260,23 @@ export default function ResultView({ data }: Props) {
           </Card>
 
           {/* 避難所 */}
-          <Card title="最寄りの避難場所（OSM登録）" icon="🚪" span2>
+          <Card title="最寄りの指定避難場所候補" icon="🚪" span2>
+            {data.shelters?.portalUrl && (
+              <div className="mb-3 p-3 bg-navy/5 border border-navy/20 rounded text-sm">
+                <strong>📍 公式の指定緊急避難場所は下記で確認してください</strong>
+                <a
+                  href={data.shelters.portalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block mt-1 text-navy underline"
+                >
+                  → 国土地理院 指定緊急避難場所マップ（地図上で確認）
+                </a>
+                <p className="text-xs text-ink/60 mt-1">
+                  以下はOpenStreetMapに「emergency」「disaster」タグで登録された参考情報（駅の休憩所等は除外済み）。自治体公式の避難場所一覧とマップも必ず参照してください。
+                </p>
+              </div>
+            )}
             {data.shelters && data.shelters.shelters.length > 0 ? (
               <div className="space-y-2">
                 {data.shelters.shelters.map((s, i) => (
@@ -294,13 +310,13 @@ export default function ResultView({ data }: Props) {
                   </div>
                 ))}
                 <p className="text-xs text-ink/50 mt-2">
-                  ※OpenStreetMap登録の参考情報。最終確認は所在自治体の
-                  「指定緊急避難場所一覧」でお願いします。
+                  ※OSM登録の参考情報。正式な指定緊急避難場所は上記の国土地理院マップまたは所在自治体の公式一覧をご確認ください。
                 </p>
               </div>
             ) : (
               <p className="text-ink/60 text-sm">
-                自動取得できませんでした。自治体の指定緊急避難場所一覧でご確認ください。
+                OSM上では該当タグの避難場所が3km圏内に登録されていません。
+                上部の国土地理院マップリンクで公式の指定緊急避難場所をご確認ください。
                 {data.shelters?.error && (
                   <span className="block text-xs text-ink/40 mt-1">
                     ({data.shelters.error})
