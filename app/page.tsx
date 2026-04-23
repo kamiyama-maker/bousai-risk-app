@@ -36,24 +36,39 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* ヘッダ */}
-      <header className="bg-navy text-white py-8 px-6 no-print">
+      <header className="bg-navy text-white py-5 md:py-8 px-4 md:px-6 no-print">
         <div className="max-w-5xl mx-auto">
-          <div className="text-xs tracking-widest text-accent mb-2">
-            BCP JAPAN 無料勉強会ツール
+          {/* ブランドライン */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0 shadow-lg">
+              <span className="text-navy font-black text-lg md:text-xl">地</span>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-[10px] md:text-xs tracking-widest text-accent font-bold leading-tight">
+                BCPJAPAN × 神山 健
+              </div>
+              <div className="text-[10px] md:text-xs tracking-wider text-white/70 leading-tight">
+                土地診断メソッド
+              </div>
+            </div>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold leading-tight">
+          <h1 className="text-xl md:text-3xl font-bold leading-tight">
             事業継続力強化計画サポート
-            <span className="block text-base md:text-lg font-normal text-white/80 mt-1">
+            <span className="block text-sm md:text-lg font-normal text-white/80 mt-1">
               住所を入力するだけで、所在地の災害リスクを公的データから自動取得
             </span>
           </h1>
+          <p className="mt-3 text-[11px] md:text-xs text-white/60 leading-relaxed">
+            「防災は土地から始めなさい」— 著者・地盤調査8,000件超の神山健が設計した、
+            経営者・BCP担当者のための無料リスク診断ツールです。
+          </p>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-5 md:py-8">
         {/* 説明 */}
-        <div className="mb-6 no-print">
-          <p className="text-ink/80 leading-relaxed">
+        <div className="mb-5 md:mb-6 no-print">
+          <p className="text-sm md:text-base text-ink/80 leading-relaxed">
             経済産業省「事業継続力強化計画（単独型）」の STEP2
             「災害等のリスクの確認・影響の整理」に使える災害リスク情報を、
             国土地理院・J-SHIS・重ねるハザードマップ・OpenStreetMap等の公的／準公的データから一括取得します。
@@ -90,7 +105,7 @@ export default function Home() {
         {data && <ResultView data={data} />}
 
         {/* フッタ注意書き */}
-        <footer className="mt-16 pt-8 border-t border-ink/10 text-xs text-ink/50 leading-relaxed no-print">
+        <footer className="mt-12 md:mt-16 pt-6 md:pt-8 border-t border-ink/10 text-[11px] md:text-xs text-ink/50 leading-relaxed no-print">
           <p>
             <strong>ご利用にあたって：</strong>
             本ツールは公的データを機械的に集約したもので、個別の立地・建物・
@@ -98,7 +113,7 @@ export default function Home() {
             最寄りの経済産業局・自治体防災担当窓口・専門家等にご確認ください。
           </p>
           <p className="mt-2">
-            提供：株式会社BCPJAPAN（防災×BCPパワーチーム）
+            提供：株式会社BCPJAPAN（防災×BCPパワーチーム）／ 設計：神山 健
           </p>
         </footer>
       </div>
