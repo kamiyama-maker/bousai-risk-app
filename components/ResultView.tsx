@@ -87,6 +87,15 @@ export default function ResultView({ data }: Props) {
         <div className="text-lg font-medium">
           {data.geocode?.normalizedAddress ?? data.address}
         </div>
+        {data.geocode?.lowPrecision && (
+          <div className="mt-2 p-2 bg-danger/10 border border-danger/30 rounded text-sm text-danger">
+            ⚠️ <strong>番地まで正確に測位できませんでした</strong>（精度:{" "}
+            {data.geocode.precision === "prefecture"
+              ? "都道府県レベル"
+              : "市区町村レベル"}）。
+            以下の結果は広域の代表点での値です。番地を含む完全な住所で再度お試しください。
+          </div>
+        )}
         {data.geocode && (
           <div className="text-xs text-ink/60 mt-1">
             緯度 {data.geocode.lat.toFixed(5)} / 経度{" "}

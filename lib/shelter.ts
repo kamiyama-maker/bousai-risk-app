@@ -18,7 +18,7 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
 ];
-const SEARCH_RADIUS_M = 3000; // 3km まで広げる（地方部でも取れるように）
+const SEARCH_RADIUS_M = 5000; // 5km まで広げる（地方部でも取れるように）
 
 type OverpassElement = {
   id: number;
@@ -99,15 +99,21 @@ function isDisasterShelter(tags: Record<string, string>): boolean {
   }
 
   // 学校・公民館等で shelter=yes
-  if (tags.shelter === "yes" && (tags.amenity || tags.building)) {
+  if (tags.shelter === "yes") {
     return true;
   }
 
   // 名称に「避難場所」「避難所」等が含まれる
   const name = tags["name:ja"] ?? tags.name;
-  if (name && /(避難場所|避難所|防災公園)/.test(name)) {
+  if (name && /(避難場所|避難所|防災公園|広域避難)/.test(name)) {
     return true;
   }
+
+  // 学校・公民館・役場等の公共施設は潜在的避難所扱い（最後の手段）
+  if (tags.amenity === "school" && name) return true; // 学校（名前があれば）
+  if (tags.amenity === "community_centre" && name) return true; // 公民館
+  if (tags.amenity === "townhall" && name) return true; // 役場
+  if (tags.amenity === "public_building" && name) return true;
 
   return false;
 }
@@ -143,7 +149,7 @@ export async function getNearbyShelters(
   lat: number,
   lon: number
 ): Promise<ShelterResult> {
-  // 災害避難所として明示的にタグ付けされたもののみクエリ
+  // 災害避難所として明示的にタグ付けされたもの＋公共施設で避難場所の名称を含むものをクエリ
   const query = `
     [out:json][timeout:25];
     (
@@ -153,15 +159,18 @@ export async function getNearbyShelters(
       node(around:${SEARCH_RADIUS_M},${lat},${lon})["disaster:type"];
       node(around:${SEARCH_RADIUS_M},${lat},${lon})[amenity=shelter][shelter_type=emergency];
       node(around:${SEARCH_RADIUS_M},${lat},${lon})[amenity=shelter][shelter_type=community_shelter];
-      node(around:${SEARCH_RADIUS_M},${lat},${lon})[shelter=yes][amenity~"^(school|community_centre|public_building|townhall)$"];
+      node(around:${SEARCH_RADIUS_M},${lat},${lon})[shelter=yes];
       node(around:${SEARCH_RADIUS_M},${lat},${lon})["hinanjo"];
+      node(around:${SEARCH_RADIUS_M},${lat},${lon})["name"~"避難場所|避難所|防災公園|広域避難"];
       way(around:${SEARCH_RADIUS_M},${lat},${lon})[emergency=assembly_point];
       way(around:${SEARCH_RADIUS_M},${lat},${lon})[emergency=evacuation_centre];
       way(around:${SEARCH_RADIUS_M},${lat},${lon})[emergency=evacuation_site];
       way(around:${SEARCH_RADIUS_M},${lat},${lon})["disaster:type"];
-      way(around:${SEARCH_RADIUS_M},${lat},${lon})[shelter=yes][amenity~"^(school|community_centre|public_building|townhall)$"];
+      way(around:${SEARCH_RADIUS_M},${lat},${lon})[shelter=yes];
+      way(around:${SEARCH_RADIUS_M},${lat},${lon})["name"~"避難場所|避難所|防災公園|広域避難"];
+      way(around:${SEARCH_RADIUS_M},${lat},${lon})[amenity~"^(school|community_centre|public_building|townhall)$"];
     );
-    out center tags 50;
+    out center tags 100;
   `;
 
   const data = await overpassFetch(query);

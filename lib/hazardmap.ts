@@ -40,39 +40,121 @@ function latLonToTile(lat: number, lon: number, z: number) {
   return { x: xTile, y: yTile, px: pixelX, py: pixelY };
 }
 
-async function fetchTilePixel(
+/**
+ * 中心ピクセル+周辺8ピクセルをサンプリングし、最大リスクを返す。
+ * 黒潮町のようにα=0の隣接ピクセルがあっても、周辺3x3で津波想定が
+ * 取れれば検出できるようにするバグフィックス。
+ * 隣接タイル境界をまたぐ場合もハンドル。
+ */
+async function fetchTilePixelsMax(
   baseUrl: string,
   lat: number,
   lon: number
 ): Promise<RGBA | null> {
   const { x, y, px, py } = latLonToTile(lat, lon, TILE_ZOOM);
-  const url = `${baseUrl}/${TILE_ZOOM}/${x}/${y}.png`;
 
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "BCP-JAPAN-Bousai-Risk-App/1.0" },
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) {
-      // 404 はその地点にデータがない = リスクなし扱い
-      if (res.status === 404) {
-        return { r: 0, g: 0, b: 0, a: 0 };
+  // メインタイルとその周辺で、必要な隣接タイルを事前算出
+  const needTiles = new Set<string>();
+  needTiles.add(`${x},${y}`);
+  if (px <= 1) needTiles.add(`${x - 1},${y}`);
+  if (px >= 254) needTiles.add(`${x + 1},${y}`);
+  if (py <= 1) needTiles.add(`${x},${y - 1}`);
+  if (py >= 254) needTiles.add(`${x},${y + 1}`);
+  // 角近接は省略（コストと効果のバランス）
+
+  const tiles = new Map<string, ReturnType<typeof PNG.sync.read> | null>();
+  await Promise.all(
+    Array.from(needTiles).map(async (key) => {
+      const [tx, ty] = key.split(",").map(Number);
+      const url = `${baseUrl}/${TILE_ZOOM}/${tx}/${ty}.png`;
+      try {
+        const res = await fetch(url, {
+          headers: { "User-Agent": "BCP-JAPAN-Bousai-Risk-App/1.0" },
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) {
+          tiles.set(key, null); // 404 = データなし
+          return;
+        }
+        const buf = Buffer.from(await res.arrayBuffer());
+        tiles.set(key, PNG.sync.read(buf));
+      } catch (err) {
+        console.error(`HazardMap fetch failed (${url}):`, err);
+        tiles.set(key, null);
       }
-      throw new Error(`HazardMap tile HTTP ${res.status}`);
+    })
+  );
+
+  // 3x3サンプリング
+  const candidates: RGBA[] = [];
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      let tx = x;
+      let ty = y;
+      let sx = px + dx;
+      let sy = py + dy;
+      if (sx < 0) {
+        tx--;
+        sx += 256;
+      } else if (sx >= 256) {
+        tx++;
+        sx -= 256;
+      }
+      if (sy < 0) {
+        ty--;
+        sy += 256;
+      } else if (sy >= 256) {
+        ty++;
+        sy -= 256;
+      }
+      const png = tiles.get(`${tx},${ty}`);
+      if (png) {
+        const idx = (png.width * sy + sx) << 2;
+        candidates.push({
+          r: png.data[idx],
+          g: png.data[idx + 1],
+          b: png.data[idx + 2],
+          a: png.data[idx + 3],
+        });
+      }
     }
-    const buf = Buffer.from(await res.arrayBuffer());
-    const png = PNG.sync.read(buf);
-    const idx = (png.width * py + px) << 2;
-    return {
-      r: png.data[idx],
-      g: png.data[idx + 1],
-      b: png.data[idx + 2],
-      a: png.data[idx + 3],
-    };
-  } catch (err) {
-    console.error(`HazardMap fetch failed (${baseUrl}):`, err);
-    return null;
   }
+
+  if (candidates.length === 0) return null;
+
+  // αが立っている（= 何らかのリスク色がある）ピクセルの中で、
+  // 最もリスクが大きい色を返す。無ければ最初のピクセル。
+  const withRisk = candidates.filter((c) => c.a >= 16);
+  if (withRisk.length === 0) return candidates[0];
+
+  // リスクの重み付け: 青/紫系(>20m浸水、特別警戒)が高いRGB合計相対位置
+  const score = (c: RGBA) => {
+    // 高リスク順のマーカー色に近いほど高得点
+    const dist = (tr: number, tg: number, tb: number) =>
+      Math.abs(c.r - tr) + Math.abs(c.g - tg) + Math.abs(c.b - tb);
+    // 深い色ほど点数が高い
+    if (dist(0xdc, 0x7a, 0xdc) < 90) return 100; // 20m以上
+    if (dist(0xf2, 0x85, 0xc9) < 90) return 90; // 10-20m
+    if (dist(0xff, 0x91, 0x91) < 90) return 80; // 5-10m
+    if (dist(0xff, 0xb7, 0xb7) < 90) return 60; // 3-5m
+    if (dist(0xff, 0xd8, 0xc0) < 90) return 40; // 0.5-3m
+    if (dist(0xf7, 0xf5, 0xa9) < 90) return 20; // 0.5m未満
+    if (dist(0xff, 0x2a, 0x00) < 120) return 95; // 土砂特別警戒
+    if (dist(0xff, 0xff, 0x00) < 120) return 70; // 土砂警戒
+    return 10; // その他のリスク色
+  };
+
+  withRisk.sort((a, b) => score(b) - score(a));
+  return withRisk[0];
+}
+
+// 旧API互換のためのラッパー
+async function fetchTilePixel(
+  baseUrl: string,
+  lat: number,
+  lon: number
+): Promise<RGBA | null> {
+  return fetchTilePixelsMax(baseUrl, lat, lon);
 }
 
 // 洪水・高潮・津波の色コード → 浸水深

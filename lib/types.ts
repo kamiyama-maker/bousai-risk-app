@@ -5,6 +5,10 @@ export interface GeocodeResult {
   lat: number;
   lon: number;
   source: string;
+  /** ジオコーディング精度: prefecture(県のみ)/municipality(市区町村)/district(町名)/address(番地) */
+  precision: "prefecture" | "municipality" | "district" | "address";
+  /** 精度が低くて警告表示すべきかどうか */
+  lowPrecision: boolean;
 }
 
 export interface ElevationResult {
