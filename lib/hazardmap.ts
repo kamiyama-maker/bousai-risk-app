@@ -6,8 +6,11 @@ import { PNG } from "pngjs";
 import type { HazardMapResult } from "./types";
 
 const TILE_ZOOM = 16;
-/** 沿岸部確認用の広域ズーム（津波・高潮で使用）。ピクセル≈32mで、3x3 = 約96m範囲 */
-const COASTAL_ZOOM = 12;
+/** 沿岸部確認用の広域ズーム（津波・高潮で使用）。
+ *  zoom10: 1ピクセル≈150m、3x3=約450m、5x5=約750m
+ *  zoom8: 1ピクセル≈600m、3x3=約1.8km、5x5=約3.0km ← 沿岸検出に最適 */
+const COASTAL_ZOOM = 10;
+const ULTRA_WIDE_ZOOM = 8;
 
 // 各災害種別のタイル URL
 const TILE_URLS = {
@@ -214,42 +217,63 @@ export async function getHazardMap(
   lat: number,
   lon: number
 ): Promise<HazardMapResult | null> {
-  // 津波・高潮は沿岸部で判定漏れを防ぐため、精密（zoom16）＋広域（zoom12）の二段構え
-  const [flood, highTideNear, highTideWide, tsunamiNear, tsunamiWide, landslide] =
-    await Promise.all([
-      fetchTilePixel(TILE_URLS.flood, lat, lon, TILE_ZOOM),
-      fetchTilePixel(TILE_URLS.highTide, lat, lon, TILE_ZOOM),
-      fetchTilePixel(TILE_URLS.highTide, lat, lon, COASTAL_ZOOM),
-      fetchTilePixel(TILE_URLS.tsunami, lat, lon, TILE_ZOOM),
-      fetchTilePixel(TILE_URLS.tsunami, lat, lon, COASTAL_ZOOM),
-      fetchTilePixel(TILE_URLS.landslide, lat, lon, TILE_ZOOM),
-    ]);
+  // 津波・高潮は沿岸部で判定漏れを防ぐため、精密（zoom16）＋広域（zoom10）＋超広域（zoom8）の三段構え
+  const [
+    flood,
+    highTideNear,
+    highTideWide,
+    highTideUltra,
+    tsunamiNear,
+    tsunamiWide,
+    tsunamiUltra,
+    landslide,
+  ] = await Promise.all([
+    fetchTilePixel(TILE_URLS.flood, lat, lon, TILE_ZOOM),
+    fetchTilePixel(TILE_URLS.highTide, lat, lon, TILE_ZOOM),
+    fetchTilePixel(TILE_URLS.highTide, lat, lon, COASTAL_ZOOM),
+    fetchTilePixel(TILE_URLS.highTide, lat, lon, ULTRA_WIDE_ZOOM),
+    fetchTilePixel(TILE_URLS.tsunami, lat, lon, TILE_ZOOM),
+    fetchTilePixel(TILE_URLS.tsunami, lat, lon, COASTAL_ZOOM),
+    fetchTilePixel(TILE_URLS.tsunami, lat, lon, ULTRA_WIDE_ZOOM),
+    fetchTilePixel(TILE_URLS.landslide, lat, lon, TILE_ZOOM),
+  ]);
 
   const tsunamiNearResult = interpretFloodDepth(tsunamiNear);
   const tsunamiWideResult = interpretFloodDepth(tsunamiWide);
+  const tsunamiUltraResult = interpretFloodDepth(tsunamiUltra);
   const highTideNearResult = interpretFloodDepth(highTideNear);
   const highTideWideResult = interpretFloodDepth(highTideWide);
+  const highTideUltraResult = interpretFloodDepth(highTideUltra);
 
-  // 精密点で想定なしでも広域で見つかったら「近隣想定あり」として警告
-  const tsunami =
-    tsunamiNearResult.hasRisk
-      ? tsunamiNearResult
-      : tsunamiWideResult.hasRisk
-      ? {
-          depth: `近隣に津波想定域あり（${tsunamiWideResult.depth}、当該地点は区域外の可能性）`,
-          hasRisk: true,
-        }
-      : tsunamiNearResult;
+  // 精密点で想定なしでも広域/超広域で見つかったら「近隣想定あり」として警告
+  // 超広域はカバー範囲3km程度なので、沿岸市街地のほとんどをカバー
+  const tsunami = tsunamiNearResult.hasRisk
+    ? tsunamiNearResult
+    : tsunamiWideResult.hasRisk
+    ? {
+        depth: `近隣（1km圏内）に津波想定域あり（${tsunamiWideResult.depth}、当該地点は区域外の可能性）`,
+        hasRisk: true,
+      }
+    : tsunamiUltraResult.hasRisk
+    ? {
+        depth: `市区町村内に津波想定域あり（${tsunamiUltraResult.depth}、当該地点は区域外の可能性・公式マップで要確認）`,
+        hasRisk: true,
+      }
+    : tsunamiNearResult;
 
-  const highTide =
-    highTideNearResult.hasRisk
-      ? highTideNearResult
-      : highTideWideResult.hasRisk
-      ? {
-          depth: `近隣に高潮想定域あり（${highTideWideResult.depth}、当該地点は区域外の可能性）`,
-          hasRisk: true,
-        }
-      : highTideNearResult;
+  const highTide = highTideNearResult.hasRisk
+    ? highTideNearResult
+    : highTideWideResult.hasRisk
+    ? {
+        depth: `近隣（1km圏内）に高潮想定域あり（${highTideWideResult.depth}、当該地点は区域外の可能性）`,
+        hasRisk: true,
+      }
+    : highTideUltraResult.hasRisk
+    ? {
+        depth: `市区町村内に高潮想定域あり（${highTideUltraResult.depth}、当該地点は区域外の可能性）`,
+        hasRisk: true,
+      }
+    : highTideNearResult;
 
   return {
     flood: interpretFloodDepth(flood),
