@@ -161,6 +161,36 @@ export function formatPlanText(r: ResearchResult): string {
     if (j.roadDamagePct != null) {
       lines.push(`道路損傷想定：${j.roadDamagePct.toFixed(1)}%`);
     }
+    lines.push("");
+    // 建物被害・火災
+    if (
+      j.buildingCollapsePct != null ||
+      j.ignitionPct != null ||
+      j.burndownPct != null
+    ) {
+      lines.push("【建物被害・火災想定（地域平均）】");
+      if (j.buildingCollapsePct != null)
+        lines.push(`・建物全壊率：${j.buildingCollapsePct.toFixed(2)}%`);
+      if (j.ignitionPct != null)
+        lines.push(`・出火率：${j.ignitionPct.toFixed(2)}%`);
+      if (j.burndownPct != null)
+        lines.push(`・焼失率（延焼含む）：${j.burndownPct.toFixed(2)}%`);
+    }
+    // 構造別全壊率推計
+    const s = j.structureCollapseEstimate;
+    if (s.woodenOld != null) {
+      lines.push("");
+      lines.push("【当社建物の構造・築年別 全壊率推計】");
+      lines.push(`・木造 1981年以前（旧耐震）：${s.woodenOld.toFixed(2)}%`);
+      lines.push(`・木造 1981〜2000年（新耐震）：${s.woodenMid!.toFixed(2)}%`);
+      lines.push(`・木造 2000年以降：${s.woodenNew!.toFixed(2)}%`);
+      lines.push(`・RC/S造 1981年以前：${s.rcOld!.toFixed(2)}%`);
+      lines.push(`・RC/S造 1981年以降：${s.rcNew!.toFixed(2)}%`);
+      lines.push(
+        "※内閣府首都直下地震被害想定・建築研究所の耐震性能評価に基づく統計的推計。個別物件は耐震診断（一次・二次）で実測値を確認してください。"
+      );
+    }
+    lines.push("");
     lines.push(
       "※上記は「30年発生確率3%（約1000年再現期間）」クラスの地震想定。復旧計画・備蓄水食料量・代替オフィス検討はこの最長日数を基本に設計します。"
     );

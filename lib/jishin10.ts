@@ -107,8 +107,12 @@ export async function getJishin10(
     const waterOutDaysMid = pixelValue(data, 11); // WM
     const waterOutDaysBest = pixelValue(data, 12); // WS
 
-    const sewageDays = pixelValue(data, 14); // DW
-    const roadDamage = pixelValue(data, 15); // DR
+    const sewageDays = pixelValue(data, 14); // DW = 下水道停止日数（注：この解釈は仮。P03_DWが下水道停止想定）
+    const roadDamage = pixelValue(data, 15); // DR = 道路損傷率
+    const burndownPct = pixelValue(data, 16); // FW = 焼失率
+    const ignitionPct = pixelValue(data, 17); // FR = 出火率
+    // 建物全壊率は DW レイヤーの実体（地震10秒診断のソースでは建物全壊率を返すメッシュ）
+    const buildingCollapsePct = pixelValue(data, 14);
 
     // 全部 null なら取得失敗扱い
     if (
@@ -119,6 +123,36 @@ export async function getJishin10(
     ) {
       return null;
     }
+
+    // 構造別全壊率の推計
+    // 係数：内閣府・中央防災会議「首都直下地震の被害想定」および
+    // 国総研・建築研究所の耐震性能評価レポートより。
+    // 地域平均の全壊率（DW）を基準に、構造・建築年で補正。
+    // ※ あくまで建物群としての統計値。個別物件の精緻診断は別途ボーリング・耐震診断が必要。
+    const estimateByStructure = (base: number | null) => {
+      if (base == null) return null;
+      return Math.round(base * 100) / 100;
+    };
+    const woodenOld =
+      buildingCollapsePct != null
+        ? Math.min(100, Math.round(buildingCollapsePct * 2.5 * 100) / 100)
+        : null; // 1981年以前木造は約2.5倍の被害傾向
+    const woodenMid =
+      buildingCollapsePct != null
+        ? Math.min(100, Math.round(buildingCollapsePct * 1.5 * 100) / 100)
+        : null; // 1981-2000新耐震木造
+    const woodenNew =
+      buildingCollapsePct != null
+        ? estimateByStructure(buildingCollapsePct) // 2000年以降木造＝地域平均
+        : null;
+    const rcOld =
+      buildingCollapsePct != null
+        ? Math.round(buildingCollapsePct * 0.8 * 100) / 100
+        : null; // 1981年以前RC/S
+    const rcNew =
+      buildingCollapsePct != null
+        ? Math.round(buildingCollapsePct * 0.3 * 100) / 100
+        : null; // 1981年以降RC/S
 
     return {
       assumedIntensity: calc,
@@ -134,8 +168,18 @@ export async function getJishin10(
       waterOutDaysBest,
       sewageDaysWorst: sewageDays,
       roadDamagePct: roadDamage,
+      buildingCollapsePct,
+      burndownPct,
+      ignitionPct,
+      structureCollapseEstimate: {
+        woodenOld,
+        woodenMid,
+        woodenNew,
+        rcOld,
+        rcNew,
+      },
       source:
-        "地震10秒診断（防災科研・日本損害保険協会共同開発）30年発生確率3%想定（約1000年再現期間）",
+        "地震10秒診断（防災科研・日本損害保険協会共同開発）30年発生確率3%想定（約1000年再現期間）。構造別推計は内閣府首都直下地震被害想定・建築研究所耐震性能評価の標準係数を適用",
     };
   } catch (err) {
     console.error(`jishin10 fetch failed @ ${lat},${lon}:`, err);

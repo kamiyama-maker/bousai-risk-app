@@ -84,6 +84,20 @@ export interface Jishin10Result {
   sewageDaysWorst: number | null;
   /** 道路損傷率 (%) */
   roadDamagePct: number | null;
+  /** 建物全壊率 (%)：地域全体での平均 */
+  buildingCollapsePct: number | null;
+  /** 焼失率 (%)：火災による焼失建物の割合 */
+  burndownPct: number | null;
+  /** 出火率 (%)：建物あたりの出火発生確率 */
+  ignitionPct: number | null;
+  /** 構造別の全壊率推計（内閣府被害想定の標準係数で算出） */
+  structureCollapseEstimate: {
+    woodenOld: number | null; // 旧耐震（1981年以前）木造
+    woodenMid: number | null; // 新耐震（1981-2000）木造
+    woodenNew: number | null; // 2000年以降木造
+    rcOld: number | null; // 旧耐震 RC/S造
+    rcNew: number | null; // 新耐震 RC/S造
+  };
   source: string;
 }
 

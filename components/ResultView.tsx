@@ -292,6 +292,136 @@ export default function ResultView({ data }: Props) {
                     </span>
                   )}
                 </div>
+
+                {/* 建物被害 */}
+                {(data.jishin10.buildingCollapsePct != null ||
+                  data.jishin10.burndownPct != null ||
+                  data.jishin10.ignitionPct != null) && (
+                  <div className="mt-4 pt-4 border-t border-ink/10">
+                    <h4 className="font-bold text-navy mb-2">
+                      🏚️ 建物被害・火災想定（地域平均）
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {data.jishin10.buildingCollapsePct != null && (
+                        <div className="border border-ink/10 rounded-lg p-3 bg-paper/50">
+                          <div className="text-xs text-ink/60">建物全壊率</div>
+                          <div className="text-2xl font-bold text-danger">
+                            {data.jishin10.buildingCollapsePct.toFixed(2)}
+                            <span className="text-sm ml-1">%</span>
+                          </div>
+                          <div className="text-xs text-ink/50 mt-1">
+                            地域内で全壊する建物の割合
+                          </div>
+                        </div>
+                      )}
+                      {data.jishin10.ignitionPct != null && (
+                        <div className="border border-ink/10 rounded-lg p-3 bg-paper/50">
+                          <div className="text-xs text-ink/60">出火率</div>
+                          <div className="text-2xl font-bold text-warn">
+                            {data.jishin10.ignitionPct.toFixed(2)}
+                            <span className="text-sm ml-1">%</span>
+                          </div>
+                          <div className="text-xs text-ink/50 mt-1">
+                            建物あたりの出火発生確率
+                          </div>
+                        </div>
+                      )}
+                      {data.jishin10.burndownPct != null && (
+                        <div className="border border-ink/10 rounded-lg p-3 bg-paper/50">
+                          <div className="text-xs text-ink/60">焼失率</div>
+                          <div className="text-2xl font-bold text-warn">
+                            {data.jishin10.burndownPct.toFixed(2)}
+                            <span className="text-sm ml-1">%</span>
+                          </div>
+                          <div className="text-xs text-ink/50 mt-1">
+                            延焼を含む焼失建物割合
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 構造別全壊率推計 */}
+                {data.jishin10.structureCollapseEstimate.woodenOld != null && (
+                  <div className="mt-4 pt-4 border-t border-ink/10">
+                    <h4 className="font-bold text-navy mb-2">
+                      📐 構造・建築年別 全壊率推計（自社建物の該当欄を確認）
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-navy/5">
+                            <th className="text-left p-2">構造／建築年</th>
+                            <th className="text-right p-2">全壊率推計</th>
+                            <th className="text-left p-2">BCPへの含意</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t border-ink/10">
+                            <td className="p-2">木造 1981年以前（旧耐震）</td>
+                            <td className="p-2 text-right font-mono text-danger font-bold">
+                              {data.jishin10.structureCollapseEstimate.woodenOld!.toFixed(
+                                2
+                              )}%
+                            </td>
+                            <td className="p-2 text-ink/70 text-xs">
+                              耐震補強または建替を強く推奨。BCP上は代替拠点必須。
+                            </td>
+                          </tr>
+                          <tr className="border-t border-ink/10">
+                            <td className="p-2">木造 1981〜2000年（新耐震）</td>
+                            <td className="p-2 text-right font-mono text-warn font-bold">
+                              {data.jishin10.structureCollapseEstimate.woodenMid!.toFixed(
+                                2
+                              )}%
+                            </td>
+                            <td className="p-2 text-ink/70 text-xs">
+                              耐震診断・接合金物の補強を推奨。
+                            </td>
+                          </tr>
+                          <tr className="border-t border-ink/10">
+                            <td className="p-2">木造 2000年以降</td>
+                            <td className="p-2 text-right font-mono">
+                              {data.jishin10.structureCollapseEstimate.woodenNew!.toFixed(
+                                2
+                              )}%
+                            </td>
+                            <td className="p-2 text-ink/70 text-xs">
+                              地域平均相当。家具転倒対策を優先。
+                            </td>
+                          </tr>
+                          <tr className="border-t border-ink/10">
+                            <td className="p-2">非木造（RC・S造） 1981年以前</td>
+                            <td className="p-2 text-right font-mono">
+                              {data.jishin10.structureCollapseEstimate.rcOld!.toFixed(
+                                2
+                              )}%
+                            </td>
+                            <td className="p-2 text-ink/70 text-xs">
+                              耐震診断を実施、Is値0.6以上か確認。
+                            </td>
+                          </tr>
+                          <tr className="border-t border-ink/10">
+                            <td className="p-2">非木造（RC・S造） 1981年以降</td>
+                            <td className="p-2 text-right font-mono text-ok">
+                              {data.jishin10.structureCollapseEstimate.rcNew!.toFixed(
+                                2
+                              )}%
+                            </td>
+                            <td className="p-2 text-ink/70 text-xs">
+                              構造的にはほぼ問題なし。内装・設備固定優先。
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-xs text-ink/50 mt-2">
+                      ※構造別推計は内閣府首都直下地震被害想定・建築研究所耐震性能評価の統計的係数を
+                      地域平均の全壊率に乗じたもの。個別建物の精緻診断は耐震診断（一次・二次）で確認してください。
+                    </p>
+                  </div>
+                )}
                 <p className="text-xs text-ink/50 mt-3">
                   出典：{data.jishin10.source}
                 </p>
