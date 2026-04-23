@@ -9,6 +9,11 @@ interface Props {
   data: ResearchResult;
 }
 
+// 神山健の相談窓口（TimeRex）
+// BCP JAPAN 無料相談（Zoom 30分）。Ken指定URL。
+const TIMEREX_URL = "https://timerex.net/s/kamiyama_9139_c521/48022201";
+const LINE_URL = "https://lin.ee/6QvsI59";
+
 function hasRiskToLevel(hasRisk: boolean, depth: string): RiskLevel {
   if (!hasRisk) return "none";
   if (/20m|10〜20m|5〜10m/.test(depth)) return "high";
@@ -53,38 +58,43 @@ export default function ResultView({ data }: Props) {
   const handlePrint = () => window.print();
 
   return (
-    <div className="mt-8">
-      {/* タブ */}
-      <div className="flex gap-1 border-b border-ink/10 mb-4 no-print">
-        <TabBtn active={tab === "cards"} onClick={() => setTab("cards")}>
-          リスク一覧カード
-        </TabBtn>
-        <TabBtn active={tab === "plan"} onClick={() => setTab("plan")}>
-          申請様式コピペ用
-        </TabBtn>
-        <TabBtn active={tab === "json"} onClick={() => setTab("json")}>
-          生データ (JSON)
-        </TabBtn>
-        <div className="ml-auto flex gap-2">
+    <div className="mt-6 md:mt-8">
+      {/* タブ + アクションボタン：モバイルでは2段組み */}
+      <div className="mb-4 no-print">
+        <div className="flex gap-0.5 md:gap-1 border-b border-ink/10 overflow-x-auto">
+          <TabBtn active={tab === "cards"} onClick={() => setTab("cards")}>
+            <span className="md:hidden">カード</span>
+            <span className="hidden md:inline">リスク一覧カード</span>
+          </TabBtn>
+          <TabBtn active={tab === "plan"} onClick={() => setTab("plan")}>
+            <span className="md:hidden">申請原稿</span>
+            <span className="hidden md:inline">申請様式コピペ用</span>
+          </TabBtn>
+          <TabBtn active={tab === "json"} onClick={() => setTab("json")}>
+            <span className="md:hidden">JSON</span>
+            <span className="hidden md:inline">生データ (JSON)</span>
+          </TabBtn>
+        </div>
+        <div className="flex gap-2 mt-3">
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 text-sm bg-navy text-white rounded hover:bg-navy/90"
+            className="flex-1 md:flex-none px-4 py-2.5 md:py-1.5 text-sm bg-navy text-white rounded hover:bg-navy/90 min-h-[44px] md:min-h-0 font-medium"
           >
             {copied ? "✓ コピー完了" : "申請原稿をコピー"}
           </button>
           <button
             onClick={handlePrint}
-            className="px-3 py-1.5 text-sm border border-navy text-navy rounded hover:bg-navy/5"
+            className="flex-1 md:flex-none px-4 py-2.5 md:py-1.5 text-sm border border-navy text-navy rounded hover:bg-navy/5 min-h-[44px] md:min-h-0 font-medium"
           >
-            PDFとして保存 / 印刷
+            PDF / 印刷
           </button>
         </div>
       </div>
 
       {/* ヘッダ：対象住所 */}
-      <div className="mb-6 p-4 bg-white border border-ink/10 rounded-lg">
+      <div className="mb-5 md:mb-6 p-3 md:p-4 bg-white border border-ink/10 rounded-lg">
         <div className="text-xs text-ink/60">調査対象住所</div>
-        <div className="text-lg font-medium">
+        <div className="text-base md:text-lg font-medium break-all">
           {data.geocode?.normalizedAddress ?? data.address}
         </div>
         {data.geocode?.lowPrecision && (
@@ -114,7 +124,7 @@ export default function ResultView({ data }: Props) {
       </div>
 
       {tab === "cards" && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* 地震 */}
           <Card title="地震リスク（J-SHIS）" icon="🌀">
             {data.jshis ? (
@@ -249,7 +259,7 @@ export default function ResultView({ data }: Props) {
                 {data.jishin10.assumedIntensityLabel &&
                   data.jishin10.assumedIntensityLabel !== "データなし" && (
                     <div className="mb-3 p-3 bg-navy/5 border border-navy/20 rounded text-sm">
-                      <strong>想定揺れ：{data.jishin10.assumedIntensityLabel}</strong>
+                      <strong>想定揼れ：{data.jishin10.assumedIntensityLabel}</strong>
                       {data.jishin10.assumedIntensity != null && (
                         <span className="ml-2 text-ink/60">
                           （計測震度 {data.jishin10.assumedIntensity.toFixed(1)}）
@@ -577,6 +587,72 @@ export default function ResultView({ data }: Props) {
         </div>
       )}
 
+      {/* 💡 神山健の相談CTA — 結果の直下に配置（最も目につく位置） */}
+      <div className="mt-8 md:mt-10 no-print">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-navy to-navy/90 text-white p-5 md:p-8 shadow-xl">
+          {/* 背景装飾 */}
+          <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-accent/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+
+          <div className="relative">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                <span className="text-navy font-black text-lg md:text-xl">相</span>
+              </div>
+              <div>
+                <div className="text-[10px] md:text-xs text-accent font-bold tracking-widest">
+                  NEXT STEP — 結果を活かす
+                </div>
+                <h3 className="text-lg md:text-2xl font-bold leading-tight mt-1">
+                  この診断結果を、<br className="md:hidden" />
+                  <span className="text-accent">社内BCPに組み込む</span>ご相談
+                </h3>
+              </div>
+            </div>
+
+            <p className="text-sm md:text-base text-white/85 leading-relaxed mb-5">
+              上記のリスクは「自動取得した公的データ」です。
+              <br className="hidden md:block" />
+              実際の事業継続力強化計画の<strong className="text-accent">認定取得</strong>・
+              <strong className="text-accent">社内BCP研修</strong>・
+              <strong className="text-accent">顧問契約</strong>まで、
+              地盤調査8,000件超の実績を持つ<strong>神山 健</strong>が直接ご相談に乗ります。
+              初回オンライン30分は<strong className="text-accent">無料</strong>です。
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <a
+                href={TIMEREX_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 px-4 py-3.5 md:py-3 bg-accent text-navy font-bold rounded-lg hover:bg-accent/90 transition-colors min-h-[52px] md:min-h-0 text-sm md:text-base shadow-md"
+              >
+                <span className="text-lg">📅</span>
+                <span>無料オンライン相談を予約</span>
+                <span className="text-xs opacity-70">（TimeRex）</span>
+              </a>
+              <a
+                href={LINE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 px-4 py-3.5 md:py-3 bg-white/10 border border-white/30 text-white font-bold rounded-lg hover:bg-white/20 transition-colors min-h-[52px] md:min-h-0 text-sm md:text-base"
+              >
+                <span className="text-lg">💬</span>
+                <span>LINEで気軽に質問</span>
+                <span className="text-xs opacity-70">（公式）</span>
+              </a>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-x-4 gap-y-1 text-[11px] md:text-xs text-white/60">
+              <span>✓ 認定率100%の実績</span>
+              <span>✓ 助成金申請サポート可</span>
+              <span>✓ 養成講座Ver.10運営中</span>
+              <span>✓ スーパーホテル他 大手実績多数</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 印刷時専用：全情報を1ページに */}
       <div className="hidden print:block mt-6">
         <h2 className="text-xl font-bold border-b border-ink pb-2 mb-4">
@@ -637,11 +713,11 @@ function Card({
 }) {
   return (
     <div
-      className={`bg-white border border-ink/10 rounded-lg p-5 ${
+      className={`bg-white border border-ink/10 rounded-lg p-4 md:p-5 ${
         span2 ? "md:col-span-2" : ""
       }`}
     >
-      <h3 className="font-bold text-navy mb-3">
+      <h3 className="font-bold text-navy mb-3 text-sm md:text-base">
         {icon && <span className="mr-2">{icon}</span>}
         {title}
       </h3>
