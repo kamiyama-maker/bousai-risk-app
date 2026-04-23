@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background: #f5f3ee;
+  color: #1c1d1f;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-break {
+    page-break-after: always;
+  }
+}
