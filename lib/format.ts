@@ -128,6 +128,50 @@ export function formatPlanText(r: ResearchResult): string {
   }
   lines.push("");
 
+  // ライフライン停止想定（地震10秒診断・悪条件＝最長ケース）
+  lines.push("■ ライフライン停止想定期間（悪条件＝最長ケース）");
+  if (r.jishin10) {
+    const j = r.jishin10;
+    const fmt = (v: number | null) => (v == null ? "—" : `${v.toFixed(0)}日`);
+    if (j.assumedIntensityLabel && j.assumedIntensityLabel !== "データなし") {
+      lines.push(
+        `想定揺れ：${j.assumedIntensityLabel}（計測震度${
+          j.assumedIntensity != null ? j.assumedIntensity.toFixed(1) : "—"
+        }）`
+      );
+    }
+    lines.push(
+      `停電：最長 ${fmt(j.powerOutDaysWorst)}（中央 ${fmt(
+        j.powerOutDaysMid
+      )}／最短 ${fmt(j.powerOutDaysBest)}）`
+    );
+    lines.push(
+      `都市ガス：最長 ${fmt(j.gasOutDaysWorst)}（中央 ${fmt(
+        j.gasOutDaysMid
+      )}／最短 ${fmt(j.gasOutDaysBest)}）`
+    );
+    lines.push(
+      `上水道：最長 ${fmt(j.waterOutDaysWorst)}（中央 ${fmt(
+        j.waterOutDaysMid
+      )}／最短 ${fmt(j.waterOutDaysBest)}）`
+    );
+    if (j.sewageDaysWorst != null) {
+      lines.push(`下水道：最長 ${fmt(j.sewageDaysWorst)}`);
+    }
+    if (j.roadDamagePct != null) {
+      lines.push(`道路損傷想定：${j.roadDamagePct.toFixed(1)}%`);
+    }
+    lines.push(
+      "※上記は「30年発生確率3%（約1000年再現期間）」クラスの地震想定。復旧計画・備蓄水食料量・代替オフィス検討はこの最長日数を基本に設計します。"
+    );
+    lines.push(`（出典：${j.source}）`);
+  } else {
+    lines.push(
+      "地震10秒診断データの取得に失敗しました。https://nied-weblabo.bosai.go.jp/10sec-sim/ で直接確認してください。"
+    );
+  }
+  lines.push("");
+
   // 避難所
   lines.push("■ 最寄りの指定避難場所");
   if (r.shelters?.portalUrl) {

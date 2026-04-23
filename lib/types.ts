@@ -64,6 +64,29 @@ export interface FireRiskResult {
   comment: string;
 }
 
+export interface Jishin10Result {
+  /** 想定計測震度（P03=30年3%≒1000年再現） */
+  assumedIntensity: number | null;
+  assumedIntensityLabel: string;
+  /** 停電想定日数 */
+  powerOutDaysWorst: number | null; // 最長（悪条件）
+  powerOutDaysMid: number | null; // 中央
+  powerOutDaysBest: number | null; // 最短
+  /** ガス停止想定日数 */
+  gasOutDaysWorst: number | null;
+  gasOutDaysMid: number | null;
+  gasOutDaysBest: number | null;
+  /** 上水道停止想定日数 */
+  waterOutDaysWorst: number | null;
+  waterOutDaysMid: number | null;
+  waterOutDaysBest: number | null;
+  /** 下水道想定停止日数 */
+  sewageDaysWorst: number | null;
+  /** 道路損傷率 (%) */
+  roadDamagePct: number | null;
+  source: string;
+}
+
 export interface ResearchResult {
   address: string;
   queryAt: string; // ISO timestamp
@@ -73,5 +96,7 @@ export interface ResearchResult {
   hazard: HazardMapResult | null;
   shelters: ShelterResult | null;
   fire: FireRiskResult | null;
+  /** 地震10秒診断由来のライフライン停止想定日数（悪条件＝最長） */
+  jishin10: Jishin10Result | null;
   errors: string[];
 }

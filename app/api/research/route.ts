@@ -5,6 +5,7 @@ import { getJshis } from "@/lib/jshis";
 import { getHazardMap } from "@/lib/hazardmap";
 import { getNearbyShelters } from "@/lib/shelter";
 import { estimateFireRisk } from "@/lib/fire";
+import { getJishin10 } from "@/lib/jishin10";
 import type { ResearchResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   }
 
   // 以降は全て並列実行（1本失敗しても他が返るように）
-  const [elev, jshis, hazard, shelters, fire] = await Promise.all([
+  const [elev, jshis, hazard, shelters, fire, jishin10] = await Promise.all([
     getElevation(geo.lat, geo.lon).catch((e) => {
       errors.push("標高API失敗: " + String(e));
       return null;
@@ -65,6 +66,10 @@ export async function POST(req: Request) {
         comment: "取得失敗",
       };
     }),
+    getJishin10(geo.lat, geo.lon).catch((e) => {
+      errors.push("地震10秒診断失敗: " + String(e));
+      return null;
+    }),
   ]);
 
   const result: ResearchResult = {
@@ -76,6 +81,7 @@ export async function POST(req: Request) {
     hazard,
     shelters,
     fire,
+    jishin10,
     errors,
   };
 
