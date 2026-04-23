@@ -6,6 +6,8 @@ import { PNG } from "pngjs";
 import type { HazardMapResult } from "./types";
 
 const TILE_ZOOM = 16;
+/** 沿岸部確認用の広域ズーム（津波・高潮で使用）。ピクセル≈32mで、3x3 = 約96m範囲 */
+const COASTAL_ZOOM = 12;
 
 // 各災害種別のタイル URL
 const TILE_URLS = {
@@ -49,9 +51,10 @@ function latLonToTile(lat: number, lon: number, z: number) {
 async function fetchTilePixelsMax(
   baseUrl: string,
   lat: number,
-  lon: number
+  lon: number,
+  zoom: number = TILE_ZOOM
 ): Promise<RGBA | null> {
-  const { x, y, px, py } = latLonToTile(lat, lon, TILE_ZOOM);
+  const { x, y, px, py } = latLonToTile(lat, lon, zoom);
 
   // メインタイルとその周辺で、必要な隣接タイルを事前算出
   const needTiles = new Set<string>();
@@ -66,7 +69,7 @@ async function fetchTilePixelsMax(
   await Promise.all(
     Array.from(needTiles).map(async (key) => {
       const [tx, ty] = key.split(",").map(Number);
-      const url = `${baseUrl}/${TILE_ZOOM}/${tx}/${ty}.png`;
+      const url = `${baseUrl}/${zoom}/${tx}/${ty}.png`;
       try {
         const res = await fetch(url, {
           headers: { "User-Agent": "BCP-JAPAN-Bousai-Risk-App/1.0" },
@@ -152,9 +155,10 @@ async function fetchTilePixelsMax(
 async function fetchTilePixel(
   baseUrl: string,
   lat: number,
-  lon: number
+  lon: number,
+  zoom: number = TILE_ZOOM
 ): Promise<RGBA | null> {
-  return fetchTilePixelsMax(baseUrl, lat, lon);
+  return fetchTilePixelsMax(baseUrl, lat, lon, zoom);
 }
 
 // 洪水・高潮・津波の色コード → 浸水深
@@ -210,17 +214,47 @@ export async function getHazardMap(
   lat: number,
   lon: number
 ): Promise<HazardMapResult | null> {
-  const [flood, highTide, tsunami, landslide] = await Promise.all([
-    fetchTilePixel(TILE_URLS.flood, lat, lon),
-    fetchTilePixel(TILE_URLS.highTide, lat, lon),
-    fetchTilePixel(TILE_URLS.tsunami, lat, lon),
-    fetchTilePixel(TILE_URLS.landslide, lat, lon),
-  ]);
+  // 津波・高潮は沿岸部で判定漏れを防ぐため、精密（zoom16）＋広域（zoom12）の二段構え
+  const [flood, highTideNear, highTideWide, tsunamiNear, tsunamiWide, landslide] =
+    await Promise.all([
+      fetchTilePixel(TILE_URLS.flood, lat, lon, TILE_ZOOM),
+      fetchTilePixel(TILE_URLS.highTide, lat, lon, TILE_ZOOM),
+      fetchTilePixel(TILE_URLS.highTide, lat, lon, COASTAL_ZOOM),
+      fetchTilePixel(TILE_URLS.tsunami, lat, lon, TILE_ZOOM),
+      fetchTilePixel(TILE_URLS.tsunami, lat, lon, COASTAL_ZOOM),
+      fetchTilePixel(TILE_URLS.landslide, lat, lon, TILE_ZOOM),
+    ]);
+
+  const tsunamiNearResult = interpretFloodDepth(tsunamiNear);
+  const tsunamiWideResult = interpretFloodDepth(tsunamiWide);
+  const highTideNearResult = interpretFloodDepth(highTideNear);
+  const highTideWideResult = interpretFloodDepth(highTideWide);
+
+  // 精密点で想定なしでも広域で見つかったら「近隣想定あり」として警告
+  const tsunami =
+    tsunamiNearResult.hasRisk
+      ? tsunamiNearResult
+      : tsunamiWideResult.hasRisk
+      ? {
+          depth: `近隣に津波想定域あり（${tsunamiWideResult.depth}、当該地点は区域外の可能性）`,
+          hasRisk: true,
+        }
+      : tsunamiNearResult;
+
+  const highTide =
+    highTideNearResult.hasRisk
+      ? highTideNearResult
+      : highTideWideResult.hasRisk
+      ? {
+          depth: `近隣に高潮想定域あり（${highTideWideResult.depth}、当該地点は区域外の可能性）`,
+          hasRisk: true,
+        }
+      : highTideNearResult;
 
   return {
     flood: interpretFloodDepth(flood),
-    highTide: interpretFloodDepth(highTide),
-    tsunami: interpretFloodDepth(tsunami),
+    highTide,
+    tsunami,
     landslide: interpretLandslide(landslide),
     portalUrl: `https://disaportal.gsi.go.jp/hazardmapportal/hazardmap/maps/index.html?ll=${lat},${lon}&z=16&base=pale&vs=c1j0l0u0t0h0z0&disp=11111`,
   };
