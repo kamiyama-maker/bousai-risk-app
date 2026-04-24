@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="BCP">
+  <rect width="100" height="100" rx="20" fill="#e88545"/>
+  <text x="50" y="68" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif"
+        font-weight="900" font-size="44" fill="#ffffff" letter-spacing="-1">BCP</text>
+</svg>
