@@ -10,8 +10,8 @@ const config: Config = {
       colors: {
         ink: "#1c1d1f",
         paper: "#f5f3ee",
-        navy: "#1e3a5f",
-        accent: "#c8a24a",
+        navy: "#e88545",
+        accent: "#ffffff",
         danger: "#b33a3a",
         warn: "#d07d2a",
         ok: "#3e8e5a",
