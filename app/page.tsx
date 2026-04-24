@@ -39,26 +39,29 @@ export default function Home() {
       <header className="bg-navy text-white py-5 md:py-8 px-4 md:px-6 no-print">
         <div className="max-w-5xl mx-auto">
           {/* ブランドライン */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0 shadow-lg">
-              <span className="text-navy font-black text-lg md:text-xl">地</span>
-            </div>
+          <div className="flex items-center gap-3 mb-3">
+            {/* ロゴ（BCP 実践的 事業継続力強化計画） */}
+            <img
+              src="/logo.svg"
+              alt="BCP 実践的 事業継続力強化計画"
+              className="w-14 h-14 md:w-20 md:h-20 rounded-lg shadow-lg flex-shrink-0 bg-white/10"
+            />
             <div className="flex flex-col">
-              <div className="text-[10px] md:text-xs tracking-widest text-accent font-bold leading-tight">
+              <div className="text-[11px] md:text-sm tracking-widest text-white font-bold leading-tight">
                 BCPJAPAN × 神山 健
               </div>
-              <div className="text-[10px] md:text-xs tracking-wider text-white/70 leading-tight">
+              <div className="text-[10px] md:text-xs tracking-wider text-white/80 leading-tight mt-0.5">
                 土地診断メソッド
               </div>
             </div>
           </div>
           <h1 className="text-xl md:text-3xl font-bold leading-tight">
             事業継続力強化計画サポート
-            <span className="block text-sm md:text-lg font-normal text-white/80 mt-1">
+            <span className="block text-sm md:text-lg font-normal text-white/90 mt-1">
               住所を入力するだけで、所在地の災害リスクを公的データから自動取得
             </span>
           </h1>
-          <p className="mt-3 text-[11px] md:text-xs text-white/60 leading-relaxed">
+          <p className="mt-3 text-[11px] md:text-xs text-white/80 leading-relaxed">
             「防災は土地から始めなさい」— 著者・地盤調査8,000件超の神山健が設計した、
             経営者・BCP担当者のための無料リスク診断ツールです。
           </p>
