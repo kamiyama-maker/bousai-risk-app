@@ -2,26 +2,26 @@
   <!-- 背景：白の角丸正方形 -->
   <rect x="0" y="0" width="500" height="500" rx="48" ry="48" fill="#ffffff"/>
 
-  <!-- 左上：筆記体 "BCP" オレンジ、斜め、半透明 -->
+  <!-- 左上：筆記体 "BCP" オレンジ、斜め、細め -->
   <g transform="translate(30,130) rotate(-8)" opacity="0.9">
-    <text x="0" y="0" font-family="'Brush Script MT','Segoe Script','cursive'" font-style="italic" font-weight="700" font-size="130" fill="#e88545">BCP</text>
+    <text x="0" y="0" font-family="'Brush Script MT','Segoe Script','cursive'" font-style="italic" font-weight="300" font-size="130" fill="#e88545">BCP</text>
   </g>
 
-  <!-- 「実」「践」「的」オレンジの角丸正方形 × 3 -->
+  <!-- 「実」「践」「的」オレンジの角丸正方形 × 3（文字は細身） -->
   <g>
     <rect x="115" y="150" width="80" height="80" rx="8" fill="#e88545"/>
-    <text x="155" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="900" font-size="54" fill="#ffffff">実</text>
+    <text x="155" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="400" font-size="54" fill="#ffffff">実</text>
 
     <rect x="210" y="150" width="80" height="80" rx="8" fill="#e88545"/>
-    <text x="250" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="900" font-size="54" fill="#ffffff">践</text>
+    <text x="250" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="400" font-size="54" fill="#ffffff">践</text>
 
     <rect x="305" y="150" width="80" height="80" rx="8" fill="#e88545"/>
-    <text x="345" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="900" font-size="54" fill="#ffffff">的</text>
+    <text x="345" y="210" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="400" font-size="54" fill="#ffffff">的</text>
   </g>
 
-  <!-- 「事業継続力」オレンジ文字 -->
-  <text x="250" y="330" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="900" font-size="68" fill="#e88545" letter-spacing="2">事業継続力</text>
+  <!-- 「事業継続力」オレンジ文字（細身・字間広め） -->
+  <text x="250" y="330" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="300" font-size="68" fill="#e88545" letter-spacing="6">事業継続力</text>
 
-  <!-- 「強化計画」オレンジ文字 -->
-  <text x="250" y="425" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="900" font-size="68" fill="#e88545" letter-spacing="4">強化計画</text>
+  <!-- 「強化計画」オレンジ文字（細身・字間広め） -->
+  <text x="250" y="425" text-anchor="middle" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic','Meiryo',sans-serif" font-weight="300" font-size="68" fill="#e88545" letter-spacing="10">強化計画</text>
 </svg>
